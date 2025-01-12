@@ -53,6 +53,8 @@ public static class Utils
     public static string GetAppUsersFilePath()
     {
         return Path.Combine(GetAppDirectoryPath(), "users.json");
+
+
     }
 
     public static string GetTodosFilePath(Guid userId)
