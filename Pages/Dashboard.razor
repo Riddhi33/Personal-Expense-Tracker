@@ -39,13 +39,20 @@
     </div>
 </div>
 
-
 <div class="row mb-4">
     <div class="col-lg-6">
-        <h3>Transaction Pie Chart</h3>
+        <h3>Transactions Bargraph</h3>
         <canvas id="transactionsChart" class="mb-3"></canvas>
+     </div>
+     <div class="col-lg-6">
+        <!-- Added margin for gap -->
+        <h3>Transaction Pie chart</h3>
+        <canvas id="transactionsPieChart" class="mb-3"></canvas>
     </div>
 </div>
+
+
+
 
 
 <div class="row">
@@ -242,7 +249,7 @@
 
         FilteredInflows = Inflows;
         FilteredOutflows = Outflows;
-   
+
         // Ensure the current user is loaded
         if (GlobalState.CurrentUser == null || GlobalState.CurrentUser.Id == Guid.Empty)
         {
@@ -320,22 +327,51 @@
         if (firstRender)
         {
             await InitializeChart();
+            await InitializePieChart();
         }
     }
 
+    // private async Task InitializeChart()
+    // {
+    //     var chartData = new
+    //     {
+    //         labels = new[] { "Inflows", "Outflows", "Debts" },
+    //         datasets = new[]
+    //         {
+    //             new
+    //             {
+    //                 data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
+    //                 backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+    //             }
+    //         }
+    //     };
+
+    //     var chartOptions = new
+    //     {
+    //         responsive = true,
+    //         plugins = new
+    //         {
+    //             legend = new { position = "top" }
+    //         }
+    //     };
+
+    //     await JSRuntime.InvokeVoidAsync("renderPieChart", "transactionsChart", chartData, chartOptions);
+    // }
+
     private async Task InitializeChart()
     {
+        //This is for bargarph
         var chartData = new
         {
             labels = new[] { "Inflows", "Outflows", "Debts" },
             datasets = new[]
             {
-                new
-                {
-                    data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
-                    backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
-                }
+            new
+            {
+                data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
+                backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
             }
+        }
         };
 
         var chartOptions = new
@@ -344,11 +380,53 @@
             plugins = new
             {
                 legend = new { position = "top" }
+            },
+            scales = new
+            {
+                x = new { beginAtZero = true }, // Ensure bars start from 0
+                y = new { beginAtZero = true }
             }
         };
 
-        await JSRuntime.InvokeVoidAsync("renderPieChart", "transactionsChart", chartData, chartOptions);
+        await JSRuntime.InvokeVoidAsync("renderBarChart", "transactionsChart", chartData, chartOptions);
     }
+
+    private async Task InitializePieChart()
+    {
+        // Pie Chart Data and Options
+
+        var pieChartData = new
+        {
+            labels = new[] { "Inflows", "Outflows", "Debts" },
+            datasets = new[]
+        {
+            new
+            {
+                data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
+                backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+            }
+        }
+        };
+
+        var pieChartOptions = new
+        {
+            responsive = true,
+            plugins = new
+            {
+                legend = new { position = "bottom" }
+            }
+        };
+
+        // Render the pie chart
+        await JSRuntime.InvokeVoidAsync("renderPieChart", "transactionsPieChart", pieChartData, pieChartOptions);
+
+    }
+
+
+
+    
+
+
 
 
     public static List<Transaction> GetAll(Guid userId)
