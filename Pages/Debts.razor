@@ -1,11 +1,16 @@
 ﻿@page "/debts"
 
-<nav class="navbar navbar-light bg-light justify-content-between">
-    <h1 class="navbar-brand mb-0 h1">Debts</h1>
-    <button class="btn btn-primary" type="button" @onclick="OpenAddTodoDialog">
-        <span class="oi oi-plus" /> Add Debt
-    </button>
+<nav class="navbar navbar-expand-lg navbar-light bg-primary text-white p-3 shadow-sm">
+    <div class="container-fluid">
+        <h1 class="navbar-brand mb-0 h1 text-white">Debts</h1>
+        <input type="search" class="form-control search" style="width: 250px" placeholder="Search" @oninput="SearchTaskName" />
+        
+        <button class="btn btn-light btn-lg shadow-sm" type="button" @onclick="OpenAddTodoDialog">
+            <i class="bi bi-plus-circle-fill me-2"></i> Add Debt
+        </button>
+    </div>
 </nav>
+
 <ul class="nav nav-tabs">
     <li class="nav-item ">
         <a class='nav-link btn @(_tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
@@ -18,9 +23,9 @@
     </li>
 </ul>
 
-<table class="table">
-    <thead>
-        <tr>
+<table class="table" style="border: 2px solid">
+    <thead style="border: 2px solid">
+        <tr style="border: 2px solid">
             <th>
                 <div class="d-flex">
                     Status
@@ -61,14 +66,14 @@
             </th>
             <th>
                 <div class="d-flex">
-                    Created At
+                    Borrowed Date
                     <a class='btn text-@(_sortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
                     @onclick='()=>SortByHandler("createdAt")'>
                         <span class='oi oi-sort-@(_sortBy == "createdAt" ? _sortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
-            <th> <input type="search" class="form-control search" placeholder="Search" @oninput="SearchTaskName" /> </th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -143,13 +148,24 @@
                         </p>
                     </td>
                     <td>
-                        <button disabled="@Debt.IsDone" class="btn btn-outline-secondary" type="button"
-                        @onclick="()=>OpenEditTodoDialog(Debt)">
-                            <span class="oi oi-pencil" /> Edit
+                        <button disabled="@Debt.IsDone" class="btn btn-primary text-white me-2" type="button"
+                                style="background-color: #007bff; border: none;" @onclick="()=>OpenEditTodoDialog(Debt)">
+                            <i class="fas fa-pencil-alt"></i> Edit
                         </button>
-                        <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteTodoDialog(Debt)">
-                            <span class="oi oi-delete" /> Clear
+                        <br />
+                        <br />
+                        <button class="btn text-white me-2" type="button"
+                                style="background-color: #28a745; border: none;" @onclick="()=>OpenClearTodoDialog(Debt)">
+                            <i class="fas fa-eraser"></i> Clear
                         </button>
+                        <br />
+                        <br />
+                        <button class="btn text-white" type="button"
+                                style="background-color: #dc3545; border: none;" @onclick="()=>OpenDeleteTodoDialog(Debt)">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+
+
 
                     </td>
                 </tr>
@@ -188,10 +204,22 @@
     </ModalDialog>
 }
 
+@if (_showClearTodoDialog)
+{
+    <ModalDialog Title="Clear Todo" OnClose="@OnClearTodoDialogClose" OkLabel="Confirm">
+        <p>Are you sure you want to clear the debts?</p>
+        
+        @if (!string.IsNullOrEmpty(_clearTodoErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_clearTodoErrorMessage" />
+        }
+    </ModalDialog>
+}
+
 @if (_showDeleteTodoDialog)
 {
     <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
-        <p>Are you sure you want to clear the debt <strong>@_deleteTodo.TaskName, @_deleteTodo.SourceofDebt, @_deleteTodo.DebtAmount </strong> the debts?</p>
+        <p>Are you sure you want to delete the debts?</p>
         @* <p>Are you sure you want to delete <strong>@_deleteTodo.Amount</strong> amount?</p>
     <p>Are you sure you want to delete <strong>@_deleteTodo.Notes</strong> notes?</p>
     <p>Are you sure you want to delete <strong>@_deleteTodo.Tag</strong> tag?</p> *@
@@ -207,14 +235,18 @@
     private GlobalState _globalState { get; set; }
     private bool _showEditTodoDialog { get; set; }
     private bool _showDeleteTodoDialog { get; set; }
+    private bool _showClearTodoDialog { get; set; }
     private List<Debt> _todos { get; set; }
     private List<Debt> _deletedDebts = new List<Debt>();
+    private List<Debt> _clearedDebts = new List<Debt>();
 
     private Debt _deleteTodo { get; set; }
+    private Debt _clearTodo { get; set; }
     private string _dialogTitle { get; set; }
     private string _dialogOkLabel { get; set; }
     private string _editTodoErrorMessage { get; set; }
     private string _deleteTodoErrorMessage { get; set; }
+    private string _clearTodoErrorMessage { get; set; }
     private Debt _todoModel { get; set; }
     private string _tabFilter = "All";
     private string _sortBy = "dueDate";
@@ -226,11 +258,12 @@
         // _todos = DebtsService.GetAll(_globalState.CurrentUser.Id);
         try
         {
-            _deletedDebts = DebtsService.GetDeletedDebts(); // Initialize deleted debts
+            _clearedDebts = DebtsService.GetClearedDebts();
+            /* _deletedDebts = DebtsService.GetDeletedDebts(); */// Initialize deleted debts
         }
         catch (Exception e)
         {
-            _deletedDebts = new List<Debt>();
+            _clearedDebts = new List<Debt>();
         }
         
     }
@@ -256,34 +289,10 @@
 
     private void OpenAddTodoDialog()
     {
-        _dialogTitle = "Add Transaction";
+        _dialogTitle = "Add Debt";
         _dialogOkLabel = "Add";
         _todoModel = new Debt();
         _todoModel.Id = Guid.Empty;
-        _showEditTodoDialog = true;
-    }
-
-    private void SearchTaskName(ChangeEventArgs e)
-    {
-        var searchTerm = e.Value.ToString();
-        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
-        {
-            _todos = DebtsService.GetAll(_globalState.CurrentUser.Id).Where(t =>
-            t.TaskName.ToLower().Contains(searchTerm.ToLower())).ToList();
-        }
-        else
-        {
-            _todos = DebtsService.GetAll(_globalState.CurrentUser.Id);
-        }
-    }
-
-    private void OpenEditTodoDialog(Debt editTodo)
-    {
-        _dialogTitle = "Edit Todo";
-        _dialogOkLabel = "Save";
-
-        _todoModel = editTodo;
-
         _showEditTodoDialog = true;
     }
 
@@ -293,38 +302,41 @@
         _showDeleteTodoDialog = true;
     }
 
+    private void SearchTaskName(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            _todos = DebtsService.GetAll(_globalState.CurrentUser.Id).Where(t =>
+            t.SourceofDebt.ToLower().Contains(searchTerm.ToLower())).ToList();
+        }
+        else
+        {
+            _todos = DebtsService.GetAll(_globalState.CurrentUser.Id);
+        }
+    }
+
+    private void OpenEditTodoDialog(Debt editTodo)
+    {
+        _dialogTitle = "Edit Debt";
+        _dialogOkLabel = "Save";
+
+        _todoModel = editTodo;
+
+        _showEditTodoDialog = true;
+    }
+
+    private void OpenClearTodoDialog(Debt todoItem)
+    {
+        _clearTodo = todoItem;
+        _showClearTodoDialog = true;
+    }
+
     private void updateDate(ChangeEventArgs e)
     {
         _todoModel.DueDate = DateTime.Parse(e.Value.ToString());
     }
-    // private void OnEditTodoDialogClose(bool isCancel)
-    // {
-    //     if (isCancel)
-    //     {
-    //         _showEditTodoDialog = false;
-    //     }
-    //     else
-    //     {
-    //         try
-    //         {
-    //             _editTodoErrorMessage = "";
-    //             if (_todoModel.Id == Guid.Empty)
-    //             {
-    //                 _todos = DebtsService.Create(_globalState.CurrentUser.Id, _todoModel.TaskName, _todoModel.SourceofDebt, _todoModel.DebtAmount, _todoModel.DueDate);
-    //             }
-    //             else
-    //             {
-    //                 _todos = DebtsService.Update(_globalState.CurrentUser.Id, _todoModel.Id, _todoModel.TaskName, _todoModel.SourceofDebt, _todoModel.DebtAmount, _todoModel.DueDate,
-    //                 _todoModel.IsDone);
-    //             }
-    //             _showEditTodoDialog = false;
-    //         }
-    //         catch (Exception e)
-    //         {
-    //             _editTodoErrorMessage = e.Message;
-    //         }
-    //     }
-    // }
+  
     private void OnEditTodoDialogClose(bool isCancel)
     {
         if (isCancel)
@@ -335,12 +347,7 @@
         {
             try
             {
-                // Validation
-                // if (string.IsNullOrWhiteSpace(_todoModel.TaskName))
-                // {
-                //     _editTodoErrorMessage = "Source of detbts is required.";
-                //     return;
-                // }
+                
 
                 if (string.IsNullOrWhiteSpace(_todoModel.SourceofDebt))
                 {
@@ -378,6 +385,31 @@
         }
     }
 
+    private void OnClearTodoDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+            _showClearTodoDialog = false;
+            _clearTodo = null;
+        }
+        else
+        {
+            try
+            {
+                _clearTodoErrorMessage = "";
+                _clearedDebts.Add(_clearTodo); // Add to deleted debts
+                _todos = DebtsService.Clear(_globalState.CurrentUser.Id, _clearTodo.Id);
+                _showClearTodoDialog = false;
+                _clearTodo = null;
+                
+            }
+            catch (Exception e)
+            {
+                _clearTodoErrorMessage = e.Message;
+            }
+        }
+    }
+
     private void OnDeleteTodoDialogClose(bool isCancel)
     {
         if (isCancel)
@@ -390,7 +422,6 @@
             try
             {
                 _deleteTodoErrorMessage = "";
-                _deletedDebts.Add(_deleteTodo); // Add to deleted debts
                 _todos = DebtsService.Delete(_globalState.CurrentUser.Id, _deleteTodo.Id);
                 _showDeleteTodoDialog = false;
                 _deleteTodo = null;

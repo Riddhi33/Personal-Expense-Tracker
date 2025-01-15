@@ -1,17 +1,21 @@
 ﻿@page "/todos"
 @inject GlobalState GlobalState
 
-<nav class="navbar navbar-light bg-light justify-content-between">
-    <h1 class="navbar-brand mb-0 h1">Transactions</h1>
-    <button class="btn btn-primary" type="button" @onclick="OpenAddTodoDialog">
-        <span class="oi oi-plus" /> Add Transactions
-    </button>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-primary text-white p-3 shadow-sm">
+    <div class="container-fluid">
+        <h1 class="navbar-brand mb-0 h1 text-white">Transactions</h1>
+        <input type="search" class="form-control search" style="width: 250px" placeholder="Search" @oninput="SearchTaskName" />
+        <button class="btn btn-light btn-lg shadow-sm" type="button" @onclick="OpenAddTodoDialog">
+            <i class="bi bi-plus-circle-fill me-2"></i> Add Transactions
+        </button>
+    </div>
 </nav>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
+<table class="table" style="border: 2px solid">
+    <thead style="border: 2px solid">
+        <tr style="border: 2px solid">
+            @* <th>
                 <div class="d-flex">
                     Status
                     <a class='btn text-@(_sortBy == "status" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
@@ -19,10 +23,10 @@
                         <span class='oi oi-sort-@(_sortBy == "status" ? _sortDirection : "ascending")' />
                     </a>
                 </div>
-            </th>
+            </th> *@
             <th>
                 <div class="d-flex">
-                    <input type="search" class="form-control search" placeholder="Search" @oninput="SearchTaskName" />
+                    Transaction Type
                     <a class='btn text-@(_sortBy == "taskName" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
                        @onclick='()=>SortByHandler("taskName")'>
                         <span class='oi oi-sort-@(_sortBy == "taskName" ? _sortDirection : "ascending")' />
@@ -59,25 +63,25 @@
 
             <th>
                 <div class="d-flex">
-                    Created At
+                    Transaction Date
                     <a class='btn text-@(_sortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
                        @onclick='()=>SortByHandler("createdAt")'>
                         <span class='oi oi-sort-@(_sortBy == "createdAt" ? _sortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         @{
             IEnumerable<Transaction> todoList = _todos;
-            if (_sortBy == "status")
-            {
-                todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.IsDone) : todoList.OrderByDescending(t =>
-                t.IsDone);
-            }
-            else if (_sortBy == "taskName")
+            // if (_sortBy == "status")
+            // {
+            //     todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.IsDone) : todoList.OrderByDescending(t =>
+            //     t.IsDone);
+            // }
+            if (_sortBy == "taskName")
             {
                 todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.TaskName) : todoList.OrderByDescending(t =>
                 t.TaskName);
@@ -115,12 +119,7 @@
             foreach (var Transaction in todoList)
             {
                 <tr>
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input me-0" type="checkbox" checked="@Transaction.IsDone"
-                                   @onchange='()=>ToggleDone(Transaction)' />
-                        </div>
-                    </td>
+                    
                     <td class='@(Transaction.IsDone ? "text-decoration-line-through" : "")'>@Transaction.TaskName</td>
                     <td class='@(Transaction.IsDone ? "text-decoration-line-through" : "")'>@Transaction.Amount</td>
                     <td class='@(Transaction.IsDone ? "text-decoration-line-through" : "")'>@Transaction.Notes</td>
@@ -132,12 +131,15 @@
                         </p>
                     </td>
                     <td>
-                        <button disabled="@Transaction.IsDone" class="btn btn-outline-secondary" type="button"
-                                @onclick="()=>OpenEditTodoDialog(Transaction)">
-                            <span class="oi oi-pencil" /> Edit
+                        <button disabled="@Transaction.IsDone" class="btn btn-primary text-white me-2" type="button"
+                                style="background-color: #007bff; border: none;" @onclick="()=>OpenEditTodoDialog(Transaction)">
+                            <i class="fas fa-pencil-alt"></i> Edit
                         </button>
-                        <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteTodoDialog(Transaction)">
-                            <span class="oi oi-delete" /> Delete
+                        <br />
+                        <br />
+                        <button class="btn text-white" type="button"
+                                style="background-color: #dc3545; border: none;" @onclick="()=>OpenDeleteTodoDialog(Transaction)">
+                            <i class="fas fa-trash"></i> Delete
                         </button>
                     </td>
                 </tr>
@@ -176,6 +178,7 @@
                 <option value="Groceries">Groceries</option>
                 <option value="Monthly">Monthly</option>
                 <option value="Rent">Rent</option>
+                <option value="Salary">Salary</option>
                 <option value="Other">Other</option>
             </select>
             <label for="Tag">Tag</label>
@@ -273,7 +276,9 @@
         if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
         {
             _todos = TodosService.GetAll(_globalState.CurrentUser.Id).Where(t =>
-            t.TaskName.ToLower().Contains(searchTerm.ToLower())).ToList();
+            t.TaskName.ToLower().Contains(searchTerm.ToLower()) ||
+            (!string.IsNullOrEmpty(t.Tag) && t.Tag.ToLower().Contains(searchTerm.ToLower())) // Search in Tags
+        ).ToList();
         }
         else
         {
@@ -283,7 +288,7 @@
 
     private void OpenEditTodoDialog(Transaction editTodo)
     {
-        _dialogTitle = "Edit Todo";
+        _dialogTitle = "Edit Transaction";
         _dialogOkLabel = "Save";
 
         _todoModel = editTodo;
@@ -302,71 +307,7 @@
         _todoModel.DueDate = DateTime.Parse(e.Value.ToString());
     }
 
-    // private void OnEditTodoDialogClose(bool isCancel)
-    // {
-    //     if (isCancel)
-    //     {
-    //         _showEditTodoDialog = false;
-    //     }
-    //     else
-    //     {
-    //         try
-    //         {
-    //             _editTodoErrorMessage = "";
-
-    //             Validation for checking if the outflows is greater than net balance
-    //             if (_todoModel.TaskName == "Outflows")
-    //             {
-    //                 decimal outflowAmount = decimal.TryParse(_todoModel.Amount, out var result) ? result : 0;
-    //                 decimal currentNetBalance = _todos.Where(t => t.TaskName == "Inflows")
-    //                                                   .Sum(t => decimal.TryParse(t.Amount, out var inflow) ? inflow : 0)
-    //                                            - _todos.Where(t => t.TaskName == "Outflows" && t.Id != _todoModel.Id)
-    //                                                   .Sum(t => decimal.TryParse(t.Amount, out var outflow) ? outflow : 0);
-
-    //                 decimal debtsTotal = DebtsService.GetAll(GlobalState.CurrentUser.Id)
-    //                               .Sum(d => decimal.TryParse(d.DebtAmount, out var debt) ? debt : 0);
-
-    //                 currentNetBalance = currentNetBalance + debtsTotal;
-
-    //                 if (outflowAmount > currentNetBalance)
-    //                 {
-    //                     _editTodoErrorMessage = $"Outflow amount exceeds the available balance of {currentNetBalance:C}.";
-    //                     return;
-    //                 }
-    //             }
-
-    //             Add or update the transaction
-    //             if (_todoModel.Id == Guid.Empty)
-    //             {
-    //                 _todos = TodosService.Create(
-    //                     _globalState.CurrentUser.Id,
-    //                     _todoModel.TaskName,
-    //                     _todoModel.Amount,
-    //                     _todoModel.Notes,
-    //                     _todoModel.Tag,
-    //                     _todoModel.DueDate);
-    //             }
-    //             else
-    //             {
-    //                 _todos = TodosService.Update(
-    //                     _globalState.CurrentUser.Id,
-    //                     _todoModel.Id,
-    //                     _todoModel.TaskName,
-    //                     _todoModel.Amount,
-    //                     _todoModel.Notes,
-    //                     _todoModel.Tag,
-    //                     _todoModel.DueDate,
-    //                     _todoModel.IsDone);
-    //             }
-
-    //             _showEditTodoDialog = false;
-    //         }
-    //         catch (Exception e)
-    //         {
-    //             _editTodoErrorMessage = e.Message;
-    //         }
-    //     }
-    // }
+    
 
     private void OnEditTodoDialogClose(bool isCancel)
     {

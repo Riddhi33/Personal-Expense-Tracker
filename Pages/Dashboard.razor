@@ -1,5 +1,4 @@
-﻿
-@page "/dashboard"
+﻿@page "/dashboard"
 @inject NavigationManager NavigationManager
 
 @inject GlobalState GlobalState
@@ -7,10 +6,7 @@
 @using Todo.Data
 @inject IJSRuntime JSRuntime
 
-
-
 <h1 class="mb-4">Dashboard</h1>
-
 
 <div class="row mb-5">
     <div class="col-lg-4 col-md-6 mb-3">
@@ -43,24 +39,30 @@
     <div class="col-lg-6">
         <h3>Transactions Bargraph</h3>
         <canvas id="transactionsChart" class="mb-3"></canvas>
-     </div>
-     <div class="col-lg-6">
-        <!-- Added margin for gap -->
+    </div>
+    <div class="col-lg-6">
         <h3>Transaction Pie chart</h3>
         <canvas id="transactionsPieChart" class="mb-3"></canvas>
     </div>
 </div>
 
-
-
-
+<div class="row">
+    <!-- Buttons to toggle sections -->
+    <div class="col-lg-12 mb-4">
+        <button class="btn btn-success me-2" @onclick="ToggleInflows">View Inflow Details</button>
+        <button class="btn btn-danger me-2" @onclick="ToggleOutflows">View Outflow Details</button>
+        <button class="btn btn-primary" @onclick="ToggleDebts">View Debts</button>
+    </div>
+</div>
 
 <div class="row">
     <!-- Inflows Section -->
-    <div class="col-lg-6 mb-4">
-            <h3 style="color: green;">Inflows</h3>
-            <table class="table table-bordered table-hover table-sm">
-                <thead class="thead-light">
+    @if (showInflows)
+    {
+        <div class="col-lg-6 mb-4">
+            <h3 class="section-title">Inflows</h3>
+            <table class="table custom-table">
+                <thead>
                     <tr>
                         <th scope="col">Amount</th>
                         <th scope="col">Notes</th>
@@ -69,7 +71,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var transaction in FilteredInflows.Any() ? FilteredInflows : Inflows)
+                    @foreach (var transaction in (FilteredInflows.Any() ? FilteredInflows : Inflows)
+                   .OrderByDescending(t => decimal.TryParse(t.Amount, out var parsedAmount) ? parsedAmount : 0)
+                   .Take(5)) // Limiting to top 5 after sorting
                     {
                         <tr>
                             <td>@transaction.Amount</td>
@@ -80,15 +84,18 @@
                     }
                 </tbody>
             </table>
-
         </div>
-    </div>
+    }
+</div>
 
+<div class="row">
     <!-- Outflows Section -->
-    <div class="col-lg-6 mb-4">
-            <h3 style="color: red;">Outflows</h3>
-            <table class="table table-bordered table-hover table-sm">
-                <thead class="thead-light">
+    @if (showOutflows)
+    {
+        <div class="col-lg-6 mb-4">
+            <h3 class="section-title">Outflows</h3>
+            <table class="table custom-table">
+                <thead>
                     <tr>
                         <th scope="col">Amount</th>
                         <th scope="col">Notes</th>
@@ -97,7 +104,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var transaction in FilteredOutflows.Any() ? FilteredOutflows : Outflows)
+                    @foreach (var transaction in (FilteredOutflows.Any() ? FilteredOutflows : Outflows)
+                   .OrderByDescending(t => decimal.TryParse(t.Amount, out var parsedAmount) ? parsedAmount : 0)
+                   .Take(5)) // Limiting to top 5 after sorting
                     {
                         <tr>
                             <td>@transaction.Amount</td>
@@ -109,122 +118,61 @@
                 </tbody>
             </table>
         </div>
-
+    }
+</div>
 
 <div class="row">
-    <div class="col-lg-12">
-        
-        <h3>Debts</h3>
-        <table class="table table-bordered table-hover table-sm">
-            <thead class="thead-light">
-                <tr>
-                    @* <th scope="col">Transaction Type</th> *@
-                    <th scope="col">Source of Debts</th>
-                    <th scope="col">Debt Amount</th>
-                    <th scope="col">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var debt in debts)
-                {
+    <!-- Debts Section -->
+    @if (showDebts)
+    {
+        <div class="col-lg-12 mb-4">
+            <h3 class="section-title">Debts</h3>
+            <table class="table custom-table">
+                <thead>
                     <tr>
-                       @*  <td>@debt.TaskName</td> *@
-                        <td>@debt.SourceofDebt</td>
-                        <td>@debt.DebtAmount</td>
-                        <td>@debt.DueDate.ToString("MMM dd, yyyy")</td>
+                        <th scope="col">Source of Debts</th>
+                        <th scope="col">Debt Amount</th>
+                        <th scope="col">Date</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-    </div>
+                </thead>
+                <tbody>
+                    @foreach (var debt in (FilteredDebts.Any() ? FilteredDebts : Debts)
+                   .OrderByDescending(d => decimal.TryParse(d.DebtAmount, out var parsedAmount) ? parsedAmount : 0)
+                   .Take(5))
 
-
-    @code {
-        private List<Debt> debts = new List<Debt>();
-        private string searchTerm = string.Empty;
-        private string _tabFilter = "All";
-        private string _sortBy = "TaskName";
-        private string _sortDirection = "ascending";
-
-        protected override async Task OnInitializedAsync()
-        {
-            await LoadDebts();
-        }
-
-        private async Task LoadDebts()
-        {
-            // Fetching the debts from the service
-            debts =  DebtsService.GetAll(GlobalState.CurrentUser.Id);
-
-            // Optionally, apply any filters based on the tab selected
-            if (_tabFilter == "Due")
-            {
-                debts = debts.Where(d => !d.IsDone).ToList();
-            }
-            else if (_tabFilter == "Done")
-            {
-                debts = debts.Where(d => d.IsDone).ToList();
-            }
-
-            // Apply the sorting after fetching the debts
-            ApplySorting();
-        }
-
-        private async Task SearchDebts()
-        {
-            if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
-            {
-                debts =  DebtsService.GetAll(GlobalState.CurrentUser.Id);
-                debts = debts.Where(d => d.TaskName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                d.SourceofDebt.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                d.DebtAmount.ToString().Contains(searchTerm))
-                .ToList();
-            }
-            else
-            {
-                await LoadDebts();
-            }
-        }
-
-        private void FilterDebts(string filter)
-        {
-            _tabFilter = filter;
-            LoadDebts(); // Reload debts based on the new filter
-        }
-
-        private void SortBy(string column)
-        {
-            // Change the sorting column
-            _sortBy = column;
-            _sortDirection = _sortDirection == "ascending" ? "descending" : "ascending";
-            ApplySorting();
-        }
-
-        private void ApplySorting()
-        {
-            if (_sortBy == "TaskName")
-            {
-                debts = _sortDirection == "ascending" ? debts.OrderBy(d => d.TaskName).ToList() : debts.OrderByDescending(d => d.TaskName).ToList();
-            }
-            else if (_sortBy == "DebtAmount")
-            {
-                debts = _sortDirection == "ascending" ? debts.OrderBy(d => d.DebtAmount).ToList() : debts.OrderByDescending(d => d.DebtAmount).ToList();
-            }
-            else if (_sortBy == "SourceofDebt")
-            {
-                debts = _sortDirection == "ascending" ? debts.OrderBy(d => d.SourceofDebt).ToList() : debts.OrderByDescending(d => d.SourceofDebt).ToList();
-            }
-            else if (_sortBy == "DueDate")
-            {
-                debts = _sortDirection == "ascending" ? debts.OrderBy(d => d.DueDate).ToList() : debts.OrderByDescending(d => d.DueDate).ToList();
-            }
-        }
+                    {
+                        <tr>
+                            <td>@debt.SourceofDebt</td>
+                            <td>@debt.DebtAmount</td>
+                            <td>@debt.DueDate.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
-
-
+</div>
 
 @code {
+    private bool showInflows = false;
+    private bool showOutflows = false;
+    private bool showDebts = false;
+
+    private void ToggleInflows()
+    {
+        showInflows = !showInflows;
+    }
+
+    private void ToggleOutflows()
+    {
+        showOutflows = !showOutflows;
+    }
+
+    private void ToggleDebts()
+    {
+        showDebts = !showDebts;
+    }
+
     private string InflowsDateFilter;
     private string OutflowsDateFilter;
     private string InflowsTagFilter = string.Empty;
@@ -235,6 +183,7 @@
     private List<Transaction> Transactions = new();
     private List<Transaction> Inflows = new();
     private List<Transaction> Outflows = new();
+    private List<Debt> FilteredDebts = new();
     private List<Debt> Debts = new();
     private decimal DebtsTotal; // New: Total debts amount for calculating total depts in net balance.
     private decimal InflowsTotal;
@@ -243,61 +192,74 @@
     public static GlobalState _globalState { get; set; }
     private List<Transaction> _todos { get; set; }
 
-
     protected override void OnInitialized()
     {
-
         FilteredInflows = Inflows;
         FilteredOutflows = Outflows;
+        FilteredDebts = Debts;
 
         // Ensure the current user is loaded
         if (GlobalState.CurrentUser == null || GlobalState.CurrentUser.Id == Guid.Empty)
         {
-            // NavigationManager.NavigateTo("/login");
             return;
         }
 
         // Fetch all transactions for the current user
         Guid userId = GlobalState.CurrentUser.Id;
         _todos = TodosService.GetAll(userId);
-        // Transactions = TodosService.GetAll(userId);
 
         // Fetch debts and calculate the total debt amount
         Debts = DebtsService.GetAll(userId);
 
-
-
-
         // Calculate net balance
-
-
-
-        Transactions =GetAll(userId);
+        Transactions = GetAll(userId);
 
         // Filter and calculate summaries
-        Inflows = _todos.Where(t => t.TaskName == "Inflows").ToList();
-        Outflows = _todos.Where(t => t.TaskName == "Outflows").ToList();
+        //Here I will be parsing inflows and outflows as decimal so that i can easily integrate logic over ther
+
+
+        // Filter and calculate summaries
+        Inflows = _todos
+        .Where(t => t.TaskName == "Inflows")
+        .Select(t => new Transaction
+            {
+                Amount = decimal.TryParse(t.Amount, out var result) ? result.ToString() : "0", // Ensure Amount is numeric
+                Notes = t.Notes,
+                Tag = t.Tag,
+                DueDate = t.DueDate
+            })
+        .OrderByDescending(t => decimal.Parse(t.Amount)) // Sort numerically by Amount
+        .ToList();
+
+        Outflows = _todos
+        .Where(t => t.TaskName == "Outflows")
+        .Select(t => new Transaction
+            {
+                Amount = decimal.TryParse(t.Amount, out var result) ? result.ToString() : "0",
+                Notes = t.Notes,
+                Tag = t.Tag,
+                DueDate = t.DueDate
+            })
+        .OrderByDescending(t => decimal.Parse(t.Amount)) // Sort numerically by Amount
+        .ToList();
         DebtsTotal = Debts.Sum(d => decimal.TryParse(d.DebtAmount, out var result) ? result : 0);
+
 
 
         InflowsTotal = Inflows.Sum(t => decimal.TryParse(t.Amount, out var result) ? result : 0);
         OutflowsTotal = Outflows.Sum(t => decimal.TryParse(t.Amount, out var result) ? result : 0);
         NetBalance = (InflowsTotal - OutflowsTotal) + DebtsTotal;
-
     }
 
     private void ApplyInflowsFilter()
     {
-        // Start with all inflows
         FilteredInflows = Inflows;
 
-        // Filter by date if a valid date is selected
         if (!string.IsNullOrEmpty(InflowsDateFilter) && DateTime.TryParse(InflowsDateFilter, out var filterDate))
         {
             FilteredInflows = FilteredInflows.Where(transaction => transaction.DueDate.Date == filterDate.Date).ToList();
         }
 
-        // Filter by tag if a tag is selected
         if (!string.IsNullOrEmpty(InflowsTagFilter))
         {
             FilteredInflows = FilteredInflows.Where(transaction => transaction.Tag == InflowsTagFilter).ToList();
@@ -306,16 +268,13 @@
 
     private void ApplyOutflowsFilter()
     {
-        // Start with all outflows
         FilteredOutflows = Outflows;
 
-        // Filter by date if a valid date is selected
         if (!string.IsNullOrEmpty(OutflowsDateFilter) && DateTime.TryParse(OutflowsDateFilter, out var filterDate))
         {
             FilteredOutflows = FilteredOutflows.Where(transaction => transaction.DueDate.Date == filterDate.Date).ToList();
         }
 
-        // Filter by tag if a tag is selected
         if (!string.IsNullOrEmpty(OutflowsTagFilter))
         {
             FilteredOutflows = FilteredOutflows.Where(transaction => transaction.Tag == OutflowsTagFilter).ToList();
@@ -331,47 +290,19 @@
         }
     }
 
-    // private async Task InitializeChart()
-    // {
-    //     var chartData = new
-    //     {
-    //         labels = new[] { "Inflows", "Outflows", "Debts" },
-    //         datasets = new[]
-    //         {
-    //             new
-    //             {
-    //                 data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
-    //                 backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
-    //             }
-    //         }
-    //     };
-
-    //     var chartOptions = new
-    //     {
-    //         responsive = true,
-    //         plugins = new
-    //         {
-    //             legend = new { position = "top" }
-    //         }
-    //     };
-
-    //     await JSRuntime.InvokeVoidAsync("renderPieChart", "transactionsChart", chartData, chartOptions);
-    // }
-
     private async Task InitializeChart()
     {
-        //This is for bargarph
         var chartData = new
         {
             labels = new[] { "Inflows", "Outflows", "Debts" },
             datasets = new[]
             {
-            new
-            {
-                data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
-                backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+                new
+                {
+                    data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
+                    backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+                }
             }
-        }
         };
 
         var chartOptions = new
@@ -383,7 +314,7 @@
             },
             scales = new
             {
-                x = new { beginAtZero = true }, // Ensure bars start from 0
+                x = new { beginAtZero = true },
                 y = new { beginAtZero = true }
             }
         };
@@ -393,19 +324,17 @@
 
     private async Task InitializePieChart()
     {
-        // Pie Chart Data and Options
-
         var pieChartData = new
         {
             labels = new[] { "Inflows", "Outflows", "Debts" },
             datasets = new[]
-        {
-            new
             {
-                data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
-                backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+                new
+                {
+                    data = new[] { InflowsTotal, OutflowsTotal, DebtsTotal },
+                    backgroundColor = new[] { "#28a745", "#dc3545", "#007bff" }
+                }
             }
-        }
         };
 
         var pieChartOptions = new
@@ -417,17 +346,8 @@
             }
         };
 
-        // Render the pie chart
         await JSRuntime.InvokeVoidAsync("renderPieChart", "transactionsPieChart", pieChartData, pieChartOptions);
-
     }
-
-
-
-    
-
-
-
 
     public static List<Transaction> GetAll(Guid userId)
     {
@@ -440,7 +360,4 @@
         var json = File.ReadAllText(todosFilePath);
         return JsonSerializer.Deserialize<List<Transaction>>(json);
     }
-
 }
-
-

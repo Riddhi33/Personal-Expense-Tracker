@@ -61,4 +61,9 @@ public static class Utils
     {
         return Path.Combine(GetAppDirectoryPath(), userId.ToString() + "_todos.json");
     }
+
+    public static string GetUsersFilePath(Guid userId)
+    {
+        return Path.Combine(GetAppDirectoryPath(), userId.ToString() + "users.json");
+    }
 }

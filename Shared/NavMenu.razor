@@ -1,46 +1,48 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿<div class="top-row navbar navbar-dark" style="background: linear-gradient(to right, #6a11cb, #2575fc);">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Personal Expense Tracker</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+        <a class="navbar-brand text-white" href="" style="font-size: 1.5rem; font-weight: 700;"> Expense Tracker</a>
+        <button title="Navigation menu" class="navbar-toggler navbar-toggler-icon text-white" @onclick="ToggleNavMenu" style="border: none;">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
 <div class='@(_collapseNavMenu ? "collapse" : "")' @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3"><h5 class="text-light">Welcome <strong>@Username</strong>!</h5></div>
+    <nav class="navbar-nav flex-column p-3" style="background-color: #2c3e50; border-radius: 10px;">
+        <div class="nav-item px-3 text-white" style="font-size: 1.1rem;">
+            <h5>Welcome <strong>@Username</strong>!</h5>
+        </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/dashboard">
+            <NavLink class="nav-link text-light py-2 rounded" style="border-bottom: 2px solid transparent;" activeclass="active-link" href="/dashboard">
                 <span class="oi oi-list-rich" /> Dashboard
             </NavLink>
-        </div> 
+        </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="todos">
+            <NavLink class="nav-link text-light py-2 rounded" style="border-bottom: 2px solid transparent;" activeclass="active-link" href="todos">
                 <span class="oi oi-list-rich" /> Transaction
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/debts">
+            <NavLink class="nav-link text-light py-2 rounded" style="border-bottom: 2px solid transparent;" activeclass="active-link" href="/debts">
                 <span class="oi oi-list-rich" /> Debts
             </NavLink>
         </div>
 
-
         @if (UserRole == Role.User)
         {
-           
+            <!-- You can add more options for User Role here -->
         }
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="change-password">
+            <NavLink class="nav-link text-light py-2 rounded" style="border-bottom: 2px solid transparent;" activeclass="active-link" href="change-password">
                 <span class="oi oi-key" /> Edit Password
             </NavLink>
         </div>
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link text-danger" role="button" @onclick="LogoutHandler">
+            <NavLink class="nav-link text-danger py-2 rounded" style="border-bottom: 2px solid transparent;" activeclass="active-link" role="button" @onclick="LogoutHandler">
                 <span class="oi oi-account-logout" /> Logout
             </NavLink>
         </div>

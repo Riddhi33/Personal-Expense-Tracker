@@ -1,125 +1,121 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-	<title>Todo</title>
-	<base href="/" />
-	<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-	<link href="css/app.css" rel="stylesheet" />
-	<link href="Todo.styles.css" rel="stylesheet" />
-	<style>
-		/* Style to center the chart and adjust its size */
-		.chart-container {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			height: 100vh; /* Full viewport height */
-		}
 
-		canvas {
-			width: 500px !important; /* Set the desired width */
-			height: 300px !important; /* Set the desired height */
-		}
-	</style>
-</head>
-
-<body>
-	<div class="status-bar-safe-area"></div>
-
-	<div id="app">Loading...</div>
-
-	<div id="blazor-error-ui">
-		An unhandled error has occurred.
-		<a href="" class="reload">Reload</a>
-		<a class="dismiss">🗙</a>
-	</div>-->
-<!-- Chart container: This container contains bar graph as well as piechart -->
-<!--<div class="chart-container">
-		<canvas id="transactionsChart"></canvas>
-		<canvas id="transactionsPieChart"></canvas>
-	</div>
-
-	<script src="_framework/blazor.webview.js" autostart="false"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script>
-		function renderBarChart(canvasId, data, options) {
-			const ctx = document.getElementById(canvasId).getContext("2d");
-			new Chart(ctx, {
-				type: "bar",
-				data: data,
-				options: options
-			});
-		}
-	</script>
-
-	<script src="_framework/blazor.webview.js" autostart="false"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-	<script>
-		function renderPieChart(canvasId, data, options) {
-			const ctx = document.getElementById(canvasId).getContext("2d");
-			new Chart(ctx, {
-				type: "pie",
-				data: data,
-				options: options
-			});
-	</script>
-
-
-</body>
-</html>-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-	<title>Todo</title>
-	<base href="/" />
-	<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-	<link href="css/app.css" rel="stylesheet" />
-	<link href="Todo.styles.css" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Todo</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="Todo.styles.css" rel="stylesheet" />
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 10px;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            font-size: 18px;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            max-width: 400px;
+        }
+    </style>
 </head>
 
 <body>
-	<div class="status-bar-safe-area"></div>
+    <div class="status-bar-safe-area"></div>
 
-	<div id="app">Loading...</div>
+    <div id="app">Loading...</div>
 
-	<div id="blazor-error-ui">
-		An unhandled error has occurred.
-		<a href="" class="reload">Reload</a>
-		<a class="dismiss">🗙</a>
-	</div>
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
 
-	<!-- Chart container -->
-	<div class="chart-container">
-		<canvas id="transactionsChart"></canvas>
-		<canvas id="transactionsPieChart"></canvas>
-	</div>
+     <!--Chart container--> 
+    <div class="chart-container">
+        <canvas id="transactionsChart"></canvas>
+        <canvas id="transactionsPieChart"></canvas>
+    </div>
+     
+    
 
-	<script src="_framework/blazor.webview.js" autostart="false"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-	<script>
-		function renderBarChart(canvasId, data, options) {
-			const ctx = document.getElementById(canvasId).getContext("2d");
-			new Chart(ctx, {
-				type: "bar",
-				data: data,
-				options: options
-			});
-		}
+    <script>
+        function renderBarChart(canvasId, data, options) {
+            const ctx = document.getElementById(canvasId).getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: data,
+                options: {
+                    ...options,
+                    plugins: {
+                        tooltip: {
+                            enabled: true, // Enable tooltips
+                        },
+                        legend: {
+                            display: false, // Show legend if required
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true, // Ensure the Y-axis starts at zero
+                            title: {
+                                display: true,
+                                text: "Amount", // Label for the Y-axis
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Categories", // Label for the X-axis
+                            },
+                        },
+                    },
+                },
+            });
+        }
 
-		function renderPieChart(canvasId, data, options) {
-			const ctx = document.getElementById(canvasId).getContext("2d");
-			new Chart(ctx, {
-				type: "pie",
-				data: data,
-				options: options
-			});
-		}
-	</script>
+        function renderPieChart(canvasId, data, options) {
+            const ctx = document.getElementById(canvasId).getContext("2d");
+            new Chart(ctx, {
+                type: "pie",
+                data: data,
+                options: {
+                    ...options,
+                    plugins: {
+                        legend: {
+                            position: "right", // Set the legend to the right
+                            labels: {
+                                boxWidth: 20, // Adjust the box size
+                                padding: 10 // Add padding
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
 

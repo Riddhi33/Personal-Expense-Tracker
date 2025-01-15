@@ -5,7 +5,7 @@ namespace Todo.Data;
 public static class DebtsService
 {
     private static readonly string DebtsFilePath = "debts.json";
-    private static readonly string DeletedDebtsFilePath = "deleted_debts.json";
+    private static readonly string ClearedDebtsFilePath = "deleted_debts.json";
 
 
     private static void SaveAll(Guid userId, List<Debt> debts)
@@ -39,6 +39,30 @@ public static class DebtsService
         return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
     }
 
+    public static List<Debt> Delete(Guid userId, Guid id)
+    {
+        List<Debt> debts = GetAll(userId);
+        Debt debt = debts.FirstOrDefault(x => x.Id == id);
+
+        if (debts == null)
+        {
+            throw new Exception("Todo not found.");
+        }
+
+        debts.Remove(debt);
+        SaveAll(userId, debts);
+        return debts;
+    }
+
+    public static void DeleteByUserId(Guid userId)
+    {
+        string userDebtsFilePath = Utils.GetUsersFilePath(userId);
+        if (File.Exists(userDebtsFilePath))
+        {
+            File.Delete(userDebtsFilePath);
+        }
+    }
+
     public static List<Debt> Create(Guid userId, string taskName, string SourceofDebt, string debtAmount, DateTime dueDate)
     {
         if (dueDate < DateTime.Today)
@@ -63,7 +87,7 @@ public static class DebtsService
         return debts;
     }
 
-    public static List<Debt> Delete(Guid userId, Guid id)
+    public static List<Debt> Clear(Guid userId, Guid id)
     {
         List<Debt> debts = GetAll(userId);
         Debt debt = debts.FirstOrDefault(x => x.Id == id);
@@ -80,14 +104,14 @@ public static class DebtsService
         SaveAll(userId, debts);
 
         // Save to deleted debts
-        List<Debt> deletedDebts = GetDeletedDebts();
-        deletedDebts.Add(debt);
-        SaveDeletedDebts(deletedDebts);
+        List<Debt> clearedDebts = GetClearedDebts();
+        clearedDebts.Add(debt);
+        SaveDeletedDebts(clearedDebts);
 
         return debts;
     }
 
-    public static void DeleteByUserId(Guid userId)
+    public static void ClearByUserId(Guid userId)
     {
         string userDebtsFilePath = GetUserDebtsFilePath(userId);
         if (File.Exists(userDebtsFilePath))
@@ -115,24 +139,24 @@ public static class DebtsService
         SaveAll(userId, debts);
         return debts;
     }
-    private static void SaveDeletedDebts(List<Debt> deletedDebts)
+    private static void SaveDeletedDebts(List<Debt> clearedDebts)
     {
         string appDataDirectoryPath = Utils.GetAppDirectoryPath();
-        string fullPath = Path.Combine(appDataDirectoryPath, DeletedDebtsFilePath);
+        string fullPath = Path.Combine(appDataDirectoryPath, ClearedDebtsFilePath);
 
         if (!Directory.Exists(appDataDirectoryPath))
         {
             Directory.CreateDirectory(appDataDirectoryPath);
         }
 
-        var json = JsonSerializer.Serialize(deletedDebts, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(clearedDebts, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(fullPath, json);
     }
 
     // Get deleted debts from JSON
-    public static List<Debt> GetDeletedDebts()
+    public static List<Debt> GetClearedDebts()
     {
-        string fullPath = Path.Combine(Utils.GetAppDirectoryPath(), DeletedDebtsFilePath);
+        string fullPath = Path.Combine(Utils.GetAppDirectoryPath(), ClearedDebtsFilePath);
 
         if (!File.Exists(fullPath))
         {
@@ -141,5 +165,18 @@ public static class DebtsService
 
         var json = File.ReadAllText(fullPath);
         return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+        }
+
+
+
+          public class DebtStateService
+    {
+        private List<Debt> _clearedDebts = new List<Debt>();
+
+        public List<Debt> GetDeletedDebts() => _clearedDebts;
+
+        public void ClearDeletedDebts() => _clearedDebts.Clear();
     }
+
 }
+

@@ -35,3 +35,44 @@ thead.thead-dark th {
     height: 250px !important; /* Set desired height */
 }
 
+
+.custom-table {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9; /* Light background color for the table */
+}
+
+    .custom-table thead {
+        background-color: #e0f7fa; /* Light teal color for the header */
+        color: #007BFF; /* Blue text for header */
+        text-align: center;
+    }
+
+    .custom-table th,
+    .custom-table td {
+        padding: 12px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    /*.custom-table tbody tr {
+        background-color: #fff;*/ /* Default row background */
+        /*transition: background-color 0.3s;
+    }*/
+
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f0f0f0; /* Light gray for alternate rows */
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #e8f5e9; /* Light green on hover */
+        }
+
+.section-title {
+    color: black;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
