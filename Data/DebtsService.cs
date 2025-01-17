@@ -99,11 +99,13 @@ public static class DebtsService
 
         // Remove from the current debts list
         debts.Remove(debt);
-        debt.IsDone=true;
-        debts.Add(debt);
         SaveAll(userId, debts);
 
+        //debts.Add(debt);
+        
+
         // Save to deleted debts
+        debt.IsDone=true;
         List<Debt> clearedDebts = GetClearedDebts();
         clearedDebts.Add(debt);
         SaveDeletedDebts(clearedDebts);

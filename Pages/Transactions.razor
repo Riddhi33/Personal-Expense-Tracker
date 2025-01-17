@@ -1,4 +1,4 @@
-﻿@page "/todos"
+﻿@page "/transactions"
 @inject GlobalState GlobalState
 
 
@@ -15,15 +15,7 @@
 <table class="table" style="border: 2px solid">
     <thead style="border: 2px solid">
         <tr style="border: 2px solid">
-            @* <th>
-                <div class="d-flex">
-                    Status
-                    <a class='btn text-@(_sortBy == "status" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
-                       @onclick='()=>SortByHandler("status")'>
-                        <span class='oi oi-sort-@(_sortBy == "status" ? _sortDirection : "ascending")' />
-                    </a>
-                </div>
-            </th> *@
+            
             <th>
                 <div class="d-flex">
                     Transaction Type
@@ -163,10 +155,7 @@
             <input id="Amount" type="text" class="form-control" @bind="_todoModel.Amount" placeholder="Amount"
                    @oninput="ValidateAmount" />
             <label for="Amount">Amount</label>
-            @if (!string.IsNullOrEmpty(_editTodoErrorMessage))
-            {
-                <AlertMessage Type="danger" Message="@_editTodoErrorMessage" />
-            }
+            
         </div>
         <div class="form-floating">
             <input id="Notes" type="text" class="form-control" @bind="_todoModel.Notes" placeholder="Notes" />
@@ -194,14 +183,14 @@
         @if (!string.IsNullOrEmpty(_editTodoErrorMessage))
         {
             <AlertMessage Type="danger" Message="@_editTodoErrorMessage" />
-        }
+        } 
     </ModalDialog>
 }
 
 @if (_showDeleteTodoDialog)
 {
-    <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
-        <p>Are you sure you want to delete <strong>@_deleteTodo.TaskName, @_deleteTodo.Amount, @_deleteTodo.Notes, @_deleteTodo.Tag  </strong> the transaction?</p>
+    <ModalDialog Title="Delete Transactions" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
+        <p>Are you sure you want to delete the transaction?</p>
         @* <p>Are you sure you want to delete <strong>@_deleteTodo.Amount</strong> amount?</p>
         <p>Are you sure you want to delete <strong>@_deleteTodo.Notes</strong> notes?</p>
         <p>Are you sure you want to delete <strong>@_deleteTodo.Tag</strong> tag?</p> *@
@@ -216,6 +205,7 @@
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
     private bool _showEditTodoDialog { get; set; }
+
     private bool _showDeleteTodoDialog { get; set; }
     private List<Transaction> _todos { get; set; }
     private Transaction _deleteTodo { get; set; }
@@ -233,7 +223,7 @@
     {
         if (!decimal.TryParse(e.Value?.ToString(), out var amount) || amount <= 0)
         {
-            _editTodoErrorMessage = "Amount must be a positive number greater than zero.";
+            _editTodoErrorMessage = "Please enter valid amount";
         }
         else
         {
@@ -325,23 +315,23 @@
             // Check if TaskName is empty
             if (string.IsNullOrWhiteSpace(_todoModel.TaskName))
             {
-                _editTodoErrorMessage = "Task name is required.";
+                _editTodoErrorMessage = "Transaction Type is required.";
                 return;
             }
 
             // Check if Amount is valid and positive
             if (!decimal.TryParse(_todoModel.Amount, out var amount) || amount <= 0)
             {
-                _editTodoErrorMessage = "Amount must be a valid positive number.";
+                _editTodoErrorMessage = "Please enter valid amount";
                 return;
             }
 
             // Validate DueDate (optional, if required)
-            if (_todoModel.DueDate < DateTime.Today)
-            {
-                _editTodoErrorMessage = "Due date cannot be in the past.";
-                return;
-            }
+            // if (_todoModel.DueDate < DateTime.Today)
+            // {
+            //     _editTodoErrorMessage = "Due date cannot be in the past.";
+            //     return;
+            // }
 
             // Validation for checking if the outflows exceed the net balance
             if (_todoModel.TaskName == "Outflows")
@@ -358,7 +348,7 @@
 
                 if (amount > currentNetBalance)
                 {
-                    _editTodoErrorMessage = $"Outflow amount exceeds the available balance of {currentNetBalance:C}.";
+                    _editTodoErrorMessage = $"You don't have sufficient balance.";
                     return;
                 }
             }

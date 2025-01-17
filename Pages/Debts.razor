@@ -11,18 +11,8 @@
     </div>
 </nav>
 
-<ul class="nav nav-tabs">
-    <li class="nav-item ">
-        <a class='nav-link btn @(_tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
-    </li>
-    <li class="nav-item">
-        <a class='nav-link btn @(_tabFilter == "Due" ? "active" : "")' @onclick='()=>TabFilter("Due")'>Pending Debts</a>
-    </li>
-    <li class="nav-item">
-        <a class='nav-link btn @(_tabFilter == "Done" ? "active" : "")' @onclick='()=>TabFilter("Done")'>Cleared Debts</a>
-    </li>
-</ul>
 
+<h3> <span style="color: darkblue;">Pending Debts</span> </h3>
 <table class="table" style="border: 2px solid">
     <thead style="border: 2px solid">
         <tr style="border: 2px solid">
@@ -175,6 +165,44 @@
 </table>
 
 
+<h3> <span style="color: red;">Cleared Debts</span> </h3>
+@if (_clearedDebts.Count > 0)
+    @if (_clearedDebts.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table" style="border: 2px solid">
+                <thead style="border: 2px solid">
+                    <tr>
+                        @* <th>Task Name</th> *@
+                        <th>Source of Debt</th>
+                        <th>Debt Amount</th>
+                        <th>Due Date</th>
+                        <th class="text-center">Cleared At</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var debt in _clearedDebts.TakeLast(5))
+                    {
+                        <tr>
+                            @* <td>@debt.TaskName</td> *@
+                            <td>@debt.SourceofDebt</td>
+                            <td>@debt.DebtAmount</td>
+                            <td>@debt.DueDate.ToString("MMM dd, yyyy")</td>
+                            <td class="text-center">@DateTime.Now.ToString("MMM dd, yyyy h:mm tt")</td>
+                            
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p>No debts have been Cleared yet.</p>
+    }
+
+
 
 
 @if (_showEditTodoDialog)
@@ -218,7 +246,7 @@
 
 @if (_showDeleteTodoDialog)
 {
-    <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
+    <ModalDialog Title="Delete Debts" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
         <p>Are you sure you want to delete the debts?</p>
         @* <p>Are you sure you want to delete <strong>@_deleteTodo.Amount</strong> amount?</p>
     <p>Are you sure you want to delete <strong>@_deleteTodo.Notes</strong> notes?</p>
@@ -239,6 +267,8 @@
     private List<Debt> _todos { get; set; }
     private List<Debt> _deletedDebts = new List<Debt>();
     private List<Debt> _clearedDebts = new List<Debt>();
+
+    private decimal _totalInflows;
 
     private Debt _deleteTodo { get; set; }
     private Debt _clearTodo { get; set; }

@@ -67,7 +67,7 @@ public static class TodosService
 
         if (todo == null)
         {
-            throw new Exception("Todo not found.");
+            throw new Exception("Transaction not found.");
         }
 
         todos.Remove(todo);
@@ -91,7 +91,7 @@ public static class TodosService
 
         if (todoToUpdate == null)
         {
-            throw new Exception("Todo not found.");
+            throw new Exception("Transaction not found.");
         }
 
         todoToUpdate.TaskName = taskName;

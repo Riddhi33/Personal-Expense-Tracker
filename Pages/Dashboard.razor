@@ -14,6 +14,7 @@
             <div class="card-body">
                 <h5 class="card-title">Total Inflows</h5>
                 <p class="card-text display-6">@InflowsTotal.ToString("C")</p>
+                
             </div>
         </div>
     </div>
@@ -22,13 +23,15 @@
             <div class="card-body">
                 <h5 class="card-title">Total Outflows</h5>
                 <p class="card-text display-6">@OutflowsTotal.ToString("C")</p>
+               
             </div>
         </div>
     </div>
+    
     <div class="col-lg-4 col-md-12 mb-3">
         <div class="card text-white bg-primary shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Net Balance</h5>
+                <h5 class="card-title">Total Amount</h5>
                 <p class="card-text display-6">@NetBalance.ToString("C")</p>
             </div>
         </div>
@@ -45,7 +48,11 @@
         <canvas id="transactionsPieChart" class="mb-3"></canvas>
     </div>
 </div>
-
+<br />
+<p class="card-text"><strong>Total number of Inflows:</strong> @InflowsCount</p>
+<p class="card-text"><strong>Total number of Outflows:</strong> @OutflowsCount</p>
+<p class="card-text"><strong>Total number of Debts:</strong> @DebtsCount</p>
+<br />
 <div class="row">
     <!-- Buttons to toggle sections -->
     <div class="col-lg-12 mb-4">
@@ -177,6 +184,9 @@
     private string OutflowsDateFilter;
     private string InflowsTagFilter = string.Empty;
     private string OutflowsTagFilter = string.Empty;
+    private int InflowsCount;
+    private int OutflowsCount;
+    private int DebtsCount;
 
     private List<Transaction> FilteredInflows = new();
     private List<Transaction> FilteredOutflows = new();
@@ -214,9 +224,6 @@
         // Calculate net balance
         Transactions = GetAll(userId);
 
-        // Filter and calculate summaries
-        //Here I will be parsing inflows and outflows as decimal so that i can easily integrate logic over ther
-
 
         // Filter and calculate summaries
         Inflows = _todos
@@ -242,45 +249,25 @@
             })
         .OrderByDescending(t => decimal.Parse(t.Amount)) // Sort numerically by Amount
         .ToList();
+
+        InflowsCount = Inflows.Count;
+        OutflowsCount = Outflows.Count;
+        DebtsCount = Debts.Count;
+
         DebtsTotal = Debts.Sum(d => decimal.TryParse(d.DebtAmount, out var result) ? result : 0);
 
 
 
-        InflowsTotal = Inflows.Sum(t => decimal.TryParse(t.Amount, out var result) ? result : 0);
+        InflowsTotal = Inflows.Sum(t => decimal.TryParse(t.Amount, out var result) ? result : 0)
+                       +Debts.Sum(d => decimal.TryParse(d.DebtAmount, out var debtAmount) ? debtAmount : 0);
+
         OutflowsTotal = Outflows.Sum(t => decimal.TryParse(t.Amount, out var result) ? result : 0);
-        NetBalance = (InflowsTotal - OutflowsTotal) + DebtsTotal;
+        NetBalance = (InflowsTotal - OutflowsTotal) ;
     }
 
-    private void ApplyInflowsFilter()
-    {
-        FilteredInflows = Inflows;
+   
 
-        if (!string.IsNullOrEmpty(InflowsDateFilter) && DateTime.TryParse(InflowsDateFilter, out var filterDate))
-        {
-            FilteredInflows = FilteredInflows.Where(transaction => transaction.DueDate.Date == filterDate.Date).ToList();
-        }
-
-        if (!string.IsNullOrEmpty(InflowsTagFilter))
-        {
-            FilteredInflows = FilteredInflows.Where(transaction => transaction.Tag == InflowsTagFilter).ToList();
-        }
-    }
-
-    private void ApplyOutflowsFilter()
-    {
-        FilteredOutflows = Outflows;
-
-        if (!string.IsNullOrEmpty(OutflowsDateFilter) && DateTime.TryParse(OutflowsDateFilter, out var filterDate))
-        {
-            FilteredOutflows = FilteredOutflows.Where(transaction => transaction.DueDate.Date == filterDate.Date).ToList();
-        }
-
-        if (!string.IsNullOrEmpty(OutflowsTagFilter))
-        {
-            FilteredOutflows = FilteredOutflows.Where(transaction => transaction.Tag == OutflowsTagFilter).ToList();
-        }
-    }
-
+   
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

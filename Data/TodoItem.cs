@@ -48,4 +48,28 @@ namespace Todo.Data
 
         public bool IsDone { get; set; }
     }
+
+    public class ClearedDebt
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        public string TaskName { get; set; }
+
+        [Required(ErrorMessage = "Please provide the debt source.")]
+        public string SourceofDebt { get; set; }
+
+        public string DebtAmount { get; set; }
+
+
+
+        [Required(ErrorMessage = "Please provide a due date.")]
+        public DateTime DueDate { get; set; } = DateTime.Today;
+
+        public Guid CreatedBy { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public bool IsPaid { get; set; }
+
+        public bool IsDone { get; set; }
+    }
 }
