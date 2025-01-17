@@ -162,16 +162,24 @@
             <label for="Notes">Notes</label>
         </div>
         <div class="form-floating">
-            <select id="Tag" class="form-control" @bind="_todoModel.Tag">
+            <select id="Tag" class="form-control" @onchange="HandleTagChange">
                 <option value="" disabled selected>Select Tag</option>
-                <option value="Groceries">Groceries</option>
                 <option value="Monthly">Monthly</option>
+                <option value="Groceries">Groceries</option>
                 <option value="Rent">Rent</option>
                 <option value="Salary">Salary</option>
+                <option value="Food">Food</option>
                 <option value="Other">Other</option>
             </select>
             <label for="Tag">Tag</label>
         </div>
+        @if (_isOtherTag)
+        {
+            <div class="form-floating mt-3">
+                <input id="OtherTag" type="text" class="form-control" @bind="_todoModel.Tag" placeholder="Other Tag" />
+                <label for="OtherTag">Other Tag</label>
+            </div>
+        }
         <div class="form-floating">
          <label for="dueDate">Date</label>
             <input id="dueDate" type="date"
@@ -218,6 +226,23 @@
     private string _sortBy = "dueDate";
     private string _sortDirection = "ascending";
     private decimal DebtsTotal;
+    private bool _isOtherTag = false;
+
+
+    private void HandleTagChange(ChangeEventArgs e)
+    {
+        var selectedTag = e.Value?.ToString();
+        if (selectedTag == "Other")
+        {
+            _isOtherTag = true;
+            _todoModel.Tag = string.Empty; // Clear the tag value for custom input
+        }
+        else
+        {
+            _isOtherTag = false;
+            _todoModel.Tag = selectedTag; // Set the selected tag
+        }
+    }
 
     private void ValidateAmount(ChangeEventArgs e)
     {
